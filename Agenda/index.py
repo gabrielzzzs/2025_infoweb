@@ -17,6 +17,7 @@ class IndexUI:
             ManterServicoUI.main()
         elif op == "Cadastro de Profissionais":
             ManterProfissionalUI.main()
+        if op == "Cadastro de Horários": ManterHorarioUI.main()
 
     def sidebar():
         IndexUI.menu_admin()
