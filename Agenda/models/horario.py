@@ -1,53 +1,56 @@
 import json
+from datetime import datetime
 
-class Profissional:
-    def __init__(self, id, nome, especialidade, email, fone):
+class Horario:
+    def __init__(self, id, data, confirmado, id_cliente, id_servico, id_profissional):
         self.set_id(id)
-        self.set_nome(nome)
-        self.set_especialidade(especialidade)
-        self.set_email(email)
-        self.set_fone(fone)
+        self.set_data(data)
+        self.set_confirmado(confirmado)
+        self.set_id_cliente(id_cliente)
+        self.set_id_servico(id_servico)
+        self.set_id_profissional(id_profissional)
 
+    # ---------- Getters ----------
     def get_id(self): return self.__id
-    def get_nome(self): return self.__nome
-    def get_especialidade(self): return self.__especialidade
-    def get_email(self): return self.__email
-    def get_fone(self): return self.__fone
+    def get_data(self): return self.__data
+    def get_confirmado(self): return self.__confirmado
+    def get_id_cliente(self): return self.__id_cliente
+    def get_id_servico(self): return self.__id_servico
+    def get_id_profissional(self): return self.__id_profissional
 
     def set_id(self, id): self.__id = id
-    def set_nome(self, nome): self.__nome = nome
-    def set_especialidade(self, esp): self.__especialidade = esp
-    def set_email(self, email): self.__email = email
-    def set_fone(self, fone): self.__fone = fone
+    def set_data(self, data): self.__data = data
+    def set_confirmado(self, confirmado): self.__confirmado = confirmado
+    def set_id_cliente(self, id_cliente): self.__id_cliente = id_cliente
+    def set_id_servico(self, id_servico): self.__id_servico = id_servico
+    def set_id_profissional(self, id_profissional): self.__id_profissional = id_profissional
 
     def to_json(self):
         return {
             "id": self.__id,
-            "nome": self.__nome,
-            "especialidade": self.__especialidade,
-            "email": self.__email,
-            "fone": self.__fone
+            "data": self.__data.strftime("%d/%m/%Y %H:%M"),
+            "confirmado": self.__confirmado,
+            "id_cliente": self.__id_cliente,
+            "id_servico": self.__id_servico,
+            "id_profissional": self.__id_profissional
         }
 
     @staticmethod
     def from_json(dic):
-        return Profissional(dic["id"], dic["nome"], dic["especialidade"], dic["email"], dic["fone"])
+        data = datetime.strptime(dic["data"], "%d/%m/%Y %H:%M")
+        return Horario(dic["id"], data, dic["confirmado"], dic["id_cliente"], dic["id_servico"], dic["id_profissional"])
 
     def __str__(self):
-        return f"{self.__id} - {self.__nome} ({self.__especialidade}) - {self.__email} - {self.__fone}"
+        return f"{self.__id} - {self.__data.strftime('%d/%m/%Y %H:%M')} - Confirmado: {self.__confirmado}"
 
-
-class ProfissionalDAO:
+class HorarioDAO:
     __objetos = []
 
     @classmethod
     def inserir(cls, obj):
         cls.abrir()
-        id = 0
-        for aux in cls.__objetos:
-            if aux.get_id() > id:
-                id = aux.get_id()
-        obj.set_id(id + 1)
+        novo_id = max([h.get_id() for h in cls.__objetos], default=0) + 1
+        obj.set_id(novo_id)
         cls.__objetos.append(obj)
         cls.salvar()
 
@@ -83,19 +86,16 @@ class ProfissionalDAO:
     def abrir(cls):
         cls.__objetos = []
         try:
-            with open("profissionais.json", mode="r") as arquivo:
+            with open("horarios.json", "r") as arquivo:
                 conteudo = arquivo.read().strip()
                 if conteudo:
-                    list_dic = json.loads(conteudo)
-                    for dic in list_dic:
-                        obj = Profissional.from_json(dic)
-                        cls.__objetos.append(obj)
-        except FileNotFoundError:
-            pass
-        except json.JSONDecodeError:
+                    lista = json.loads(conteudo)
+                    for dic in lista:
+                        cls.__objetos.append(Horario.from_json(dic))
+        except (FileNotFoundError, json.JSONDecodeError):
             pass
 
     @classmethod
     def salvar(cls):
-        with open("profissionais.json", mode="w") as arquivo:
-            json.dump([obj.to_json() for obj in cls.__objetos], arquivo)
+        with open("horarios.json", "w") as arquivo:
+            json.dump([h.to_json() for h in cls.__objetos], arquivo)

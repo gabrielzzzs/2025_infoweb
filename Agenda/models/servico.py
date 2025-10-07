@@ -1,3 +1,4 @@
+import json
 class Servico:
     def __init__(self, codigo, nome, preco):
         self._codigo = codigo
@@ -34,7 +35,6 @@ class Servico:
     def __str__(self):
         return f"{self._codigo} - {self._nome} - R$ {self._preco:.2f}"
 
-from models.servico import Servico
 
 class ServicoDAO:
     _servicos = []
