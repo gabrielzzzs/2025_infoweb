@@ -1,7 +1,7 @@
 from templates.manterclienteUI import ManterClienteUI
 from templates.manterservicoUI import ManterServicoUI
 from templates.manterprofissionalUI import ManterProfissionalUI
-from templates.manterhorarioUI import ManterHorarioUI   # ✅ importar a tela de horários
+from templates.manterhorarioUI import ManterHorarioUI  
 import streamlit as st
 
 class IndexUI:
@@ -23,7 +23,7 @@ class IndexUI:
             ManterServicoUI.main()
         elif op == "Cadastro de Profissionais":
             ManterProfissionalUI.main()
-        elif op == "Cadastro de Horários":   # ✅ corrigido
+        elif op == "Cadastro de Horários":  
             ManterHorarioUI.main()
 
     def sidebar():

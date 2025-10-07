@@ -5,7 +5,6 @@ class Servico:
         self._nome = nome
         self._preco = preco
 
-    # getters
     def get_codigo(self):
         return self._codigo
 
@@ -15,7 +14,6 @@ class Servico:
     def get_preco(self):
         return self._preco
 
-    # setters
     def set_codigo(self, codigo):
         self._codigo = codigo
 

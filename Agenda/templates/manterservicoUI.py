@@ -28,7 +28,7 @@ class ManterServicoUI:
         nome = st.text_input("Informe o nome do serviço")
         preco = st.number_input("Informe o preço do serviço", min_value=0.0, step=0.01, format="%.2f")
         if st.button("Inserir"):
-            View.servico_inserir(nome, preco)  # não pede mais código
+            View.servico_inserir(nome, preco) 
             st.success("Serviço inserido com sucesso")
             time.sleep(2)
             st.rerun()

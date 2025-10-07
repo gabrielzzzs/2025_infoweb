@@ -10,7 +10,6 @@ class Horario:
         self.set_id_servico(id_servico)
         self.set_id_profissional(id_profissional)
 
-    # ---------- Getters ----------
     def get_id(self): return self.__id
     def get_data(self): return self.__data
     def get_confirmado(self): return self.__confirmado
