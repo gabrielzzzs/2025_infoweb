@@ -28,6 +28,21 @@ class View:
         cliente = Cliente(id, "", "", "")
         ClienteDAO.excluir(cliente)
 
+    @staticmethod
+    def cliente_inserir(nome, email, fone, senha):
+        cliente = Cliente(0, nome, email, fone, senha)
+        ClienteDAO.inserir(cliente)
+
+    @staticmethod
+    def cliente_atualizar(id, nome, email, fone, senha):
+        cliente = Cliente(id, nome, email, fone, senha)
+        ClienteDAO.atualizar(cliente)
+
+    @staticmethod
+    def cliente_autenticar(email, senha):
+        return ClienteDAO.autenticar(email, senha)
+
+
     # ----- Serviço -----
     @staticmethod
     def servico_inserir(nome, preco):
@@ -104,3 +119,28 @@ class View:
     def horario_excluir(id):
         obj = Horario(id, None, False, None, None, None)
         HorarioDAO.excluir(obj)
+
+    # ----- Profissional -----
+    @staticmethod
+    def profissional_inserir(nome, especialidade, conselho, email, senha):
+        ProfissionalDAO.inserir(Profissional(0, nome, especialidade, conselho, email, senha))
+
+    @staticmethod
+    def profissional_listar():
+        return ProfissionalDAO.listar()
+
+    @staticmethod
+    def profissional_listar_id(id):
+        return ProfissionalDAO.listar_id(id)
+
+    @staticmethod
+    def profissional_atualizar(id, nome, especialidade, conselho, email, senha):
+        ProfissionalDAO.atualizar(Profissional(id, nome, especialidade, conselho, email, senha))
+
+    @staticmethod
+    def profissional_excluir(id):
+        ProfissionalDAO.excluir(Profissional(id, "", "", "", "", ""))
+
+    @staticmethod
+    def profissional_autenticar(email, senha):
+        return ProfissionalDAO.autenticar(email, senha)

@@ -1,1 +1,37 @@
-[{"id": 1, "nome": "Gilbert", "email": "gilbert@email.com", "fone": "123456789"}, {"id": 2, "nome": "Azevedo", "email": "azevedo@email.com", "fone": "987654321"}, {"id": 3, "nome": "luis", "email": "gustavo@gmail.com", "fone": "8433375579484"}, {"id": 4, "nome": "luis", "email": "gustavo@gmail.com", "fone": "8433375579484"}]
+[
+    {
+        "id": 1,
+        "nome": "Gilbert",
+        "email": "gilbert@email.com",
+        "fone": "123456789",
+        "senha": ""
+    },
+    {
+        "id": 2,
+        "nome": "Azevedo",
+        "email": "azevedo@email.com",
+        "fone": "987654321",
+        "senha": ""
+    },
+    {
+        "id": 3,
+        "nome": "luis",
+        "email": "gustavo@gmail.com",
+        "fone": "8433375579484",
+        "senha": ""
+    },
+    {
+        "id": 4,
+        "nome": "luis",
+        "email": "gustavo@gmail.com",
+        "fone": "8433375579484",
+        "senha": ""
+    },
+    {
+        "id": 5,
+        "nome": "emily",
+        "email": "emyli@gmail.com",
+        "fone": "80028922",
+        "senha": "poiuyt"
+    }
+]
