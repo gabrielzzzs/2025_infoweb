@@ -2,6 +2,7 @@ from models.cliente import Cliente, ClienteDAO
 from models.servico import Servico, ServicoDAO
 from models.profissional import Profissional, ProfissionalDAO
 from models.horario import Horario, HorarioDAO
+from datetime import datetime, timedelta
 
 class View:
     # ----- Cliente -----
@@ -144,3 +145,24 @@ class View:
     @staticmethod
     def profissional_autenticar(email, senha):
         return ProfissionalDAO.autenticar(email, senha)
+
+    @staticmethod
+    def abrir_agenda(id_profissional, data, hora_inicio, hora_fim, intervalo):
+        hora_atual = datetime.combine(data, hora_inicio)
+        hora_limite = datetime.combine(data, hora_fim)
+        qtd = 0
+
+        while hora_atual < hora_limite:
+            horario = Horario(
+                id=0,
+                data=hora_atual,
+                confirmado=False,
+                id_cliente=None,
+                id_servico=None,
+                id_profissional=id_profissional
+            )
+            HorarioDAO.inserir(horario)
+            hora_atual += timedelta(minutes=intervalo)
+            qtd += 1
+
+        return qtd
