@@ -11,6 +11,7 @@ from templates.abriragendaUI import AbrirAgendaUI
 from templates.visualizaragendaUI import VisualizarAgendaUI
 from templates.visualizarservicosUI import VisualizarServicosUI
 from templates.confirmarservicoUI import ConfirmarServicoUI
+from templates.agendarservicoUI import AgendarServicoUI  # ✅ nova página adicionada
 
 
 class IndexUI:
@@ -20,7 +21,9 @@ class IndexUI:
         usuario = None
         tipo_usuario = None
 
+        # --------------------------
         # Verifica se há login salvo
+        # --------------------------
         if os.path.exists("usuario_logado.json"):
             try:
                 with open("usuario_logado.json", "r", encoding="utf-8") as f:
@@ -29,7 +32,9 @@ class IndexUI:
             except (FileNotFoundError, json.JSONDecodeError):
                 usuario = None
 
+        # --------------------------
         # Monta o menu conforme o tipo de usuário
+        # --------------------------
         if usuario is None:
             op = st.sidebar.selectbox("Menu", ["Login"], key="menu_login")
         else:
@@ -44,6 +49,7 @@ class IndexUI:
                 ]
             elif tipo_usuario == "cliente":
                 opcoes = [
+                    "Agendar Serviço",            # ✅ nova opção adicionada
                     "Visualizar Meus Serviços",
                     "Perfil"
                 ]
@@ -61,10 +67,13 @@ class IndexUI:
 
             op = st.sidebar.selectbox("Menu", opcoes, key="menu_usuario")
 
-        # Direcionamento
+        # --------------------------
+        # Direcionamento das telas
+        # --------------------------
         if usuario is None:
             if op == "Login":
                 LoginUI.main()
+
         else:
             if tipo_usuario == "profissional":
                 if op == "Cadastro de Serviços":
@@ -81,7 +90,9 @@ class IndexUI:
                     PerfilUI.main()
 
             elif tipo_usuario == "cliente":
-                if op == "Visualizar Meus Serviços":
+                if op == "Agendar Serviço":       # ✅ nova página para cliente
+                    AgendarServicoUI.main()
+                elif op == "Visualizar Meus Serviços":
                     VisualizarServicosUI.main()
                 elif op == "Perfil":
                     PerfilUI.main()

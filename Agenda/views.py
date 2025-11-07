@@ -100,6 +100,16 @@ class View:
 
     @staticmethod
     def horario_inserir(data, confirmado, id_cliente, id_servico, id_profissional):
+        # Impede agendamento duplicado (mesma data, mesmo profissional)
+        horarios = HorarioDAO.listar()
+        for h in horarios:
+            if (
+                h.get_data() == data
+                and h.get_id_profissional() == id_profissional
+                and h.get_id_cliente() is not None
+            ):
+                raise ValueError("Este horário já foi agendado por outro cliente.")
+
         obj = Horario(0, data, confirmado, id_cliente, id_servico, id_profissional)
         HorarioDAO.inserir(obj)
 

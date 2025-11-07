@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import os
+import pandas as pd
 from views import View
 
 class VisualizarAgendaUI:
@@ -42,26 +43,32 @@ class VisualizarAgendaUI:
             return
 
         # --------------------------
-        # Mostra lista formatada
+        # Monta os dados em formato de tabela
         # --------------------------
-        st.subheader("Meus Horários")
-
+        dados = []
         for h in sorted(meus_horarios, key=lambda x: x.get_data()):
-            cliente = "Disponível"
+            cliente = "-"
             servico = "-"
-
             if h.get_id_cliente():
                 cli = View.cliente_listar_id(h.get_id_cliente())
                 if cli:
                     cliente = cli.get_nome()
-
             if h.get_id_servico():
                 serv = View.servico_listar_id(h.get_id_servico())
                 if serv:
                     servico = serv.get_nome()
 
-            confirmado = "Confirmado" if h.get_confirmado() else "Pendente"
+            confirmado = "Sim" if h.get_confirmado() else "Não"
 
-            st.write(
-                f"{h.get_data().strftime('%d/%m/%Y %H:%M')} — Cliente: {cliente} — Serviço: {servico} — {confirmado}"
-            )
+            dados.append({
+                "Data e Hora": h.get_data().strftime("%d/%m/%Y %H:%M"),
+                "Cliente": cliente or "Disponível",
+                "Serviço": servico or "-",
+                "Confirmado": confirmado
+            })
+
+        # --------------------------
+        # Exibe tabela com Streamlit
+        # --------------------------
+        df = pd.DataFrame(dados)
+        st.dataframe(df, use_container_width=True)

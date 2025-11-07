@@ -47,6 +47,10 @@ class HorarioDAO:
 
     @classmethod
     def inserir(cls, obj):
+        obj.set_id_cliente(None)
+        obj.set_id_servico(None)
+        obj.set_confirmado(False)
+
         cls.abrir()
         novo_id = max([h.get_id() for h in cls.__objetos], default=0) + 1
         obj.set_id(novo_id)

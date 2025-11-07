@@ -1,6 +1,7 @@
 import streamlit as st
 import json
 import os
+import pandas as pd
 from views import View
 
 class VisualizarServicosUI:
@@ -9,7 +10,7 @@ class VisualizarServicosUI:
         st.header("Visualizar Meus Serviços")
 
         # --------------------------
-        # Verifica se há usuário logado
+        # Verifica se há login ativo
         # --------------------------
         if not os.path.exists("usuario_logado.json"):
             st.warning("Acesso restrito. Faça login como cliente para visualizar seus serviços.")
@@ -18,12 +19,11 @@ class VisualizarServicosUI:
         with open("usuario_logado.json", "r", encoding="utf-8") as f:
             usuario = json.load(f)
 
-        if usuario.get("tipo") not in ["cliente", "admin"]:
+        if usuario.get("tipo") != "cliente":
             st.warning("Acesso restrito. Esta página é apenas para clientes.")
             return
 
         id_cliente = usuario["id"]
-        st.success(f"Bem-vindo, {usuario['nome']}")
 
         # --------------------------
         # Obtém todos os horários
@@ -43,17 +43,27 @@ class VisualizarServicosUI:
             return
 
         # --------------------------
-        # Mostra lista formatada
+        # Monta tabela com colunas solicitadas
         # --------------------------
-        st.subheader("Meus Serviços Agendados")
+        dados = []
         for h in sorted(meus_horarios, key=lambda x: x.get_data()):
             prof = View.profissional_listar_id(h.get_id_profissional())
             serv = View.servico_listar_id(h.get_id_servico())
 
-            nome_prof = prof.get_nome() if prof else "Desconhecido"
+            nome_prof = prof.get_nome() if prof else "Não identificado"
             nome_serv = serv.get_nome() if serv else "Não informado"
-            status = "Confirmado" if h.get_confirmado() else "Aguardando confirmação"
+            confirmacao = "Sim" if h.get_confirmado() else "Não"
 
-            st.write(
-                f"{h.get_data().strftime('%d/%m/%Y %H:%M')} — Profissional: {nome_prof} — Serviço: {nome_serv} — {status}"
-            )
+            dados.append({
+                "ID": h.get_id(),
+                "Data": h.get_data().strftime("%d/%m/%Y %H:%M"),
+                "Confirmação": confirmacao,
+                "Serviço": nome_serv,
+                "Profissional": nome_prof
+            })
+
+        # --------------------------
+        # Exibe tabela formatada
+        # --------------------------
+        df = pd.DataFrame(dados, columns=["ID", "Data", "Confirmação", "Serviço", "Profissional"])
+        st.dataframe(df.style.hide(axis="index"), use_container_width=True)
