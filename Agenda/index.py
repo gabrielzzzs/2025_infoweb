@@ -1,3 +1,6 @@
+import streamlit as st
+import json
+import os
 from templates.manterclienteUI import ManterClienteUI
 from templates.manterservicoUI import ManterServicoUI
 from templates.manterprofissionalUI import ManterProfissionalUI
@@ -6,71 +9,100 @@ from templates.loginUI import LoginUI
 from templates.perfilUI import PerfilUI
 from templates.abriragendaUI import AbrirAgendaUI
 from templates.visualizaragendaUI import VisualizarAgendaUI
-from templates.visualizarservicosUI import VisualizarServicosUI   # ✅ novo import
-import streamlit as st
+from templates.visualizarservicosUI import VisualizarServicosUI
+from templates.confirmarservicoUI import ConfirmarServicoUI
 
 
 class IndexUI:
 
     @staticmethod
-    def menu_admin():
-        usuario = st.session_state.get("usuario_logado")
-        tipo_usuario = usuario["tipo"] if usuario else None
+    def menu():
+        usuario = None
+        tipo_usuario = None
 
-        # Menu padrão
-        opcoes = [
-            "Login",
-            "Cadastro de Clientes",
-            "Cadastro de Serviços",
-            "Cadastro de Profissionais",
-            "Cadastro de Horários",
-            "Perfil"
-        ]
+        # Verifica se há login salvo
+        if os.path.exists("usuario_logado.json"):
+            try:
+                with open("usuario_logado.json", "r", encoding="utf-8") as f:
+                    usuario = json.load(f)
+                    tipo_usuario = usuario.get("tipo")
+            except (FileNotFoundError, json.JSONDecodeError):
+                usuario = None
 
-        # Opções específicas por tipo de usuário
-        if tipo_usuario == "profissional":
-            opcoes.insert(5, "Abrir Minha Agenda")
-            opcoes.insert(6, "Visualizar Minha Agenda")
-        elif tipo_usuario == "cliente":
-            opcoes.insert(5, "Visualizar Meus Serviços")  # ✅ cliente vê essa
+        # Monta o menu conforme o tipo de usuário
+        if usuario is None:
+            op = st.sidebar.selectbox("Menu", ["Login"], key="menu_login")
+        else:
+            if tipo_usuario == "profissional":
+                opcoes = [
+                    "Cadastro de Serviços",
+                    "Cadastro de Horários",
+                    "Abrir Minha Agenda",
+                    "Visualizar Minha Agenda",
+                    "Confirmar Serviços",
+                    "Perfil"
+                ]
+            elif tipo_usuario == "cliente":
+                opcoes = [
+                    "Visualizar Meus Serviços",
+                    "Perfil"
+                ]
+            elif tipo_usuario == "admin":
+                opcoes = [
+                    "Cadastro de Clientes",
+                    "Cadastro de Serviços",
+                    "Cadastro de Profissionais",
+                    "Cadastro de Horários",
+                    "Visualizar Meus Serviços",
+                    "Perfil"
+                ]
+            else:
+                opcoes = ["Perfil"]
 
-        # Menu lateral
-        op = st.sidebar.selectbox("Menu", opcoes)
+            op = st.sidebar.selectbox("Menu", opcoes, key="menu_usuario")
 
-        # Mostra usuário logado + botão de sair
-        if usuario:
-            st.sidebar.success(f"👤 Logado como: {usuario['nome']} ({usuario['tipo']})")
-            if st.sidebar.button("Sair"):
-                del st.session_state["usuario_logado"]
-                st.rerun()
+        # Direcionamento
+        if usuario is None:
+            if op == "Login":
+                LoginUI.main()
+        else:
+            if tipo_usuario == "profissional":
+                if op == "Cadastro de Serviços":
+                    ManterServicoUI.main()
+                elif op == "Cadastro de Horários":
+                    ManterHorarioUI.main()
+                elif op == "Abrir Minha Agenda":
+                    AbrirAgendaUI.main()
+                elif op == "Visualizar Minha Agenda":
+                    VisualizarAgendaUI.main()
+                elif op == "Confirmar Serviços":
+                    ConfirmarServicoUI.main()
+                elif op == "Perfil":
+                    PerfilUI.main()
 
-        # Roteamento das telas
-        if op == "Login":
-            LoginUI.main()
-        elif op == "Cadastro de Clientes":
-            ManterClienteUI.main()
-        elif op == "Cadastro de Serviços":
-            ManterServicoUI.main()
-        elif op == "Cadastro de Profissionais":
-            ManterProfissionalUI.main()
-        elif op == "Cadastro de Horários":
-            ManterHorarioUI.main()
-        elif op == "Abrir Minha Agenda":
-            AbrirAgendaUI.main()
-        elif op == "Visualizar Minha Agenda":
-            VisualizarAgendaUI.main()
-        elif op == "Visualizar Meus Serviços":      # ✅ nova rota
-            VisualizarServicosUI.main()
-        elif op == "Perfil":
-            PerfilUI.main()
+            elif tipo_usuario == "cliente":
+                if op == "Visualizar Meus Serviços":
+                    VisualizarServicosUI.main()
+                elif op == "Perfil":
+                    PerfilUI.main()
 
-    @staticmethod
-    def sidebar():
-        IndexUI.menu_admin()
+            elif tipo_usuario == "admin":
+                if op == "Cadastro de Clientes":
+                    ManterClienteUI.main()
+                elif op == "Cadastro de Serviços":
+                    ManterServicoUI.main()
+                elif op == "Cadastro de Profissionais":
+                    ManterProfissionalUI.main()
+                elif op == "Cadastro de Horários":
+                    ManterHorarioUI.main()
+                elif op == "Visualizar Meus Serviços":
+                    VisualizarServicosUI.main()
+                elif op == "Perfil":
+                    PerfilUI.main()
 
     @staticmethod
     def main():
-        IndexUI.sidebar()
+        IndexUI.menu()
 
 
 if __name__ == "__main__":

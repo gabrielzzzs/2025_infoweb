@@ -1,28 +1,30 @@
 import streamlit as st
 from datetime import datetime
+import json
+import os
 from views import View
 
 class AbrirAgendaUI:
     @staticmethod
     def main():
-        st.header("🗓️ Abrir Minha Agenda")
+        st.header("Abrir Minha Agenda")
 
         # --------------------------
-        # Verificar login
+        # Verifica se há usuário logado
         # --------------------------
-        usuario = st.session_state.get("usuario_logado")
+        if not os.path.exists("usuario_logado.json"):
+            st.warning("Acesso restrito. Faça login como profissional para abrir sua agenda.")
+            return
 
-        if not usuario or usuario.get("tipo") != "profissional":
-            st.warning(" Acesso restrito! Faça login como profissional para abrir sua agenda.")
-            return  # interrompe aqui, não mostra o resto da tela
+        with open("usuario_logado.json", "r", encoding="utf-8") as f:
+            usuario = json.load(f)
 
-        # --------------------------
-        # Pegar o profissional logado
-        # --------------------------
-        prof_id = usuario["id"]
-        prof = View.profissional_listar_id(prof_id)
+        if usuario.get("tipo") != "profissional":
+            st.warning("Acesso restrito. Esta página é apenas para profissionais.")
+            return
 
-        st.subheader(f" Profissional: {prof.get_nome()}")
+        id_prof = usuario["id"]
+        nome_prof = usuario["nome"]
 
         # --------------------------
         # Campos da agenda
@@ -33,8 +35,8 @@ class AbrirAgendaUI:
         intervalo = st.number_input("Intervalo entre atendimentos (minutos)", min_value=10, step=5, value=30)
 
         # --------------------------
-        # Gerar horários
+        # Gerar horários automaticamente
         # --------------------------
         if st.button("Gerar horários"):
-            qtd = View.abrir_agenda(prof.get_id(), data, hora_inicio, hora_fim, intervalo)
-            st.success(f" {qtd} horários adicionados à agenda de {prof.get_nome()}!")
+            qtd = View.abrir_agenda(id_prof, data, hora_inicio, hora_fim, intervalo)
+            st.success(f"{qtd} horários adicionados à agenda de {nome_prof} com sucesso.")

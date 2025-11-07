@@ -1,34 +1,57 @@
 import streamlit as st
-from views import View
+import json
+import os
 
 class LoginUI:
     @staticmethod
     def main():
-        st.title("🔐 Login no Sistema")
+        st.title("Login no Sistema")
 
-        tipo = st.radio("Entrar como:", ["Cliente", "Profissional"])
         email = st.text_input("E-mail")
         senha = st.text_input("Senha", type="password")
 
         if st.button("Entrar"):
-            if tipo == "Profissional":
-                prof = View.profissional_autenticar(email, senha)
-                if prof:
-                    st.session_state["usuario_logado"] = {
-                        "tipo": "profissional",
-                        "id": prof.get_id(),
-                        "nome": prof.get_nome()
-                    }
-                    # ✅ marca o sucesso antes de recarregar
-                    st.session_state["login_sucesso"] = True
-                    st.session_state["nome_logado"] = prof.get_nome()
-                    st.rerun()
-                else:
-                    st.error("❌ E-mail ou senha incorretos.")
-            else:
-                st.info("🔧 Login de cliente ainda não implementado.")
+            usuario = None
+            tipo_usuario = None
 
-        if st.session_state.get("login_sucesso"):
-            st.success(f"✅ Login realizado com sucesso! Bem-vindo, {st.session_state['nome_logado']} 👋")
-            del st.session_state["login_sucesso"]
-            del st.session_state["nome_logado"]
+            # Verifica se é profissional
+            try:
+                with open("profissionais.json", "r", encoding="utf-8") as f:
+                    profissionais = json.load(f)
+            except FileNotFoundError:
+                profissionais = []
+
+            profissional = next((p for p in profissionais if p["email"] == email and p["senha"] == senha), None)
+            if profissional:
+                usuario = profissional
+                tipo_usuario = "profissional"
+
+            # Se não for profissional, tenta cliente
+            if not usuario:
+                try:
+                    with open("clientes.json", "r", encoding="utf-8") as f:
+                        clientes = json.load(f)
+                except FileNotFoundError:
+                    clientes = []
+
+                cliente = next((c for c in clientes if c["email"] == email and c["senha"] == senha), None)
+                if cliente:
+                    usuario = cliente
+                    tipo_usuario = "cliente"
+
+            # Se achou usuário
+            if usuario:
+                if tipo_usuario == "cliente" and usuario["email"].lower() == "admin@admin.com":
+                    tipo_usuario = "admin"
+
+                # Salva o usuário logado
+                with open("usuario_logado.json", "w", encoding="utf-8") as f:
+                    json.dump({
+                        "id": usuario["id"],
+                        "nome": usuario["nome"],
+                        "tipo": tipo_usuario
+                    }, f, ensure_ascii=False, indent=4)
+
+                st.success(f"Login bem-sucedido. Bem-vindo, {usuario['nome']} ({tipo_usuario}).")
+            else:
+                st.error("E-mail ou senha incorretos.")

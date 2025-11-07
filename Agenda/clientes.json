@@ -33,5 +33,12 @@
         "email": "emyli@gmail.com",
         "fone": "80028922",
         "senha": "poiuyt"
+    },
+    {
+        "id": 6,
+        "nome": "sara",
+        "email": "sarasaracoraçãocomburaquinhos@gmail.com",
+        "fone": "789456123",
+        "senha": "741852"
     }
 ]
