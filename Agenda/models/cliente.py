@@ -1,5 +1,9 @@
 import json
+from models.dao import DAO
 
+# ============================================================
+# Classe Cliente (modelo)
+# ============================================================
 class Cliente:
     def __init__(self, id, nome, email, fone, senha):
         self.set_id(id)
@@ -21,19 +25,20 @@ class Cliente:
     def set_nome(self, nome):
         if not nome or nome.strip() == "":
             raise ValueError("O nome do cliente não pode ser vazio.")
-        self.__nome = nome
+        self.__nome = nome.strip()
 
     def set_email(self, email):
         if not email or email.strip() == "":
             raise ValueError("O e-mail do cliente não pode ser vazio.")
-        self.__email = email
+        self.__email = email.strip()
 
-    def set_fone(self, fone): self.__fone = fone
+    def set_fone(self, fone):
+        self.__fone = fone.strip() if fone else ""
 
     def set_senha(self, senha):
         if not senha or senha.strip() == "":
             raise ValueError("A senha do cliente não pode ser vazia.")
-        self.__senha = senha
+        self.__senha = senha.strip()
 
     # -------- JSON --------
     def to_json(self):
@@ -58,71 +63,58 @@ class Cliente:
     def __str__(self):
         return f"{self.__id} - {self.__nome} - {self.__email} - {self.__fone}"
 
+
 # ============================================================
-# DAO - Persistência em JSON
+# DAO - Herdando da classe base DAO
 # ============================================================
-class ClienteDAO:
-    __arquivo = "clientes.json"
-    __objetos = []
+class ClienteDAO(DAO):
+    def __init__(self):
+        super().__init__("clientes.json")
 
-    @classmethod
-    def abrir(cls):
-        cls.__objetos = []
-        try:
-            with open(cls.__arquivo, "r", encoding="utf-8") as f:
-                conteudo = f.read().strip()
-                if conteudo:
-                    lista = json.loads(conteudo)
-                    cls.__objetos = [Cliente.from_json(dic) for dic in lista]
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
+    def from_json(self, dic):
+        return Cliente.from_json(dic)
 
-    @classmethod
-    def salvar(cls):
-        with open(cls.__arquivo, "w", encoding="utf-8") as f:
-            json.dump([obj.to_json() for obj in cls.__objetos], f, ensure_ascii=False, indent=4)
+    # -------- CRUD --------
+    def listar(self):
+        return self.abrir()
 
-    @classmethod
-    def listar(cls):
-        cls.abrir()
-        return cls.__objetos
+    def listar_id(self, id):
+        return next((c for c in self.abrir() if c.get_id() == id), None)
 
-    @classmethod
-    def listar_id(cls, id):
-        cls.abrir()
-        for obj in cls.__objetos:
-            if obj.get_id() == id:
-                return obj
-        return None
+    def inserir(self, obj):
+        self._objetos = self.abrir()
 
-    @classmethod
-    def inserir(cls, obj):
-        cls.abrir()
-        novo_id = max((c.get_id() for c in cls.__objetos), default=0) + 1
+        # Validação: e-mail duplicado
+        for c in self._objetos:
+            if c.get_email().lower() == obj.get_email().lower():
+                raise ValueError("E-mail já cadastrado.")
+
+        novo_id = max((c.get_id() for c in self._objetos), default=0) + 1
         obj.set_id(novo_id)
-        cls.__objetos.append(obj)
-        cls.salvar()
+        self._objetos.append(obj)
+        self.salvar()
 
-    @classmethod
-    def atualizar(cls, obj):
-        cls.abrir()
-        for i, c in enumerate(cls.__objetos):
+    def atualizar(self, obj):
+        self._objetos = self.abrir()
+
+        # Validação: e-mail duplicado (exceto o próprio)
+        for c in self._objetos:
+            if c.get_email().lower() == obj.get_email().lower() and c.get_id() != obj.get_id():
+                raise ValueError("E-mail já cadastrado.")
+
+        for i, c in enumerate(self._objetos):
             if c.get_id() == obj.get_id():
-                cls.__objetos[i] = obj
-                cls.salvar()
+                self._objetos[i] = obj
+                self.salvar()
                 return
-        cls.salvar()
+        self.salvar()
 
-    @classmethod
-    def excluir(cls, obj):
-        cls.abrir()
-        cls.__objetos = [c for c in cls.__objetos if c.get_id() != obj.get_id()]
-        cls.salvar()
+    def excluir(self, obj):
+        self._objetos = [c for c in self.abrir() if c.get_id() != obj.get_id()]
+        self.salvar()
 
-    @classmethod
-    def autenticar(cls, email, senha):
-        cls.abrir()
-        for c in cls.__objetos:
+    def autenticar(self, email, senha):
+        for c in self.abrir():
             if c.get_email() == email and c.get_senha() == senha:
                 return c
         return None

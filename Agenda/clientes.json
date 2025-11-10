@@ -48,5 +48,13 @@
         "email": "jane@jane",
         "fone": "1234567",
         "senha": "12345"
+    },
+
+    {
+        "id": 10,
+        "nome": "cliente",
+        "email": "cliente@cliente",
+        "fone": "1234567",
+        "senha": "123"
     }
 ]

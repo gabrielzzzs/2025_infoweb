@@ -1,10 +1,12 @@
 import json
 
+from models.dao import DAO  # ← nova herança
+
 class Servico:
     def __init__(self, codigo, nome, preco):
         self.codigo, self.nome, self.preco = codigo, nome, preco
 
-    # Getters e Setters (compatibilidade com outras telas)
+    # Getters e Setters
     def get_codigo(self): return self.codigo
     def get_nome(self): return self.nome
     def get_preco(self): return self.preco
@@ -21,48 +23,35 @@ class Servico:
         return f"{self.codigo} - {self.nome} - R$ {self.preco:.2f}"
 
 
-class ServicoDAO:
-    _arquivo = "servicos.json"
+# ---------- DAO com herança ----------
+class ServicoDAO(DAO):
+    def __init__(self):
+        super().__init__("servicos.json")
 
-    @classmethod
-    def _abrir(cls):
-        try:
-            with open(cls._arquivo, "r", encoding="utf-8") as f:
-                return [Servico.from_json(d) for d in json.load(f)]
-        except (FileNotFoundError, json.JSONDecodeError):
-            return []
+    def from_json(self, dic):
+        return Servico(dic["codigo"], dic["nome"], dic["preco"])
 
-    @classmethod
-    def _salvar(cls, servicos):
-        with open(cls._arquivo, "w", encoding="utf-8") as f:
-            json.dump([s.to_json() for s in servicos], f, ensure_ascii=False, indent=4)
+    # CRUD herdando comportamento do DAO
+    def inserir(self, servico):
+        self._objetos = self.abrir()
+        servico.set_codigo(max((s.get_codigo() for s in self._objetos), default=0) + 1)
+        self._objetos.append(servico)
+        self.salvar()
 
-    # CRUD
-    @classmethod
-    def inserir(cls, servico):
-        servicos = cls._abrir()
-        servico.set_codigo(max((s.get_codigo() for s in servicos), default=0) + 1)
-        servicos.append(servico)
-        cls._salvar(servicos)
+    def listar(self):
+        return self.abrir()
 
-    @classmethod
-    def listar(cls):
-        return cls._abrir()
+    def listar_id(self, id):
+        return next((s for s in self.abrir() if s.get_codigo() == id), None)
 
-    @classmethod
-    def listar_id(cls, id):
-        return next((s for s in cls._abrir() if s.get_codigo() == id), None)
-
-    @classmethod
-    def atualizar(cls, servico):
-        servicos = cls._abrir()
-        for i, s in enumerate(servicos):
+    def atualizar(self, servico):
+        self._objetos = self.abrir()
+        for i, s in enumerate(self._objetos):
             if s.get_codigo() == servico.get_codigo():
-                servicos[i] = servico
+                self._objetos[i] = servico
                 break
-        cls._salvar(servicos)
+        self.salvar()
 
-    @classmethod
-    def excluir(cls, servico):
-        servicos = [s for s in cls._abrir() if s.get_codigo() != servico.get_codigo()]
-        cls._salvar(servicos)
+    def excluir(self, servico):
+        self._objetos = [s for s in self.abrir() if s.get_codigo() != servico.get_codigo()]
+        self.salvar()

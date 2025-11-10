@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import os
 import pandas as pd
+from datetime import datetime, timedelta
 from views import View
 
 class VisualizarServicosUI:
@@ -36,7 +37,7 @@ class VisualizarServicosUI:
         # --------------------------
         # Filtra horários do cliente logado
         # --------------------------
-        meus_horarios = [h for h in horarios if h.get_id_cliente() == id_cliente]
+        meus_horarios = [h for h in horarios if h.get_id_cliente() == id_cliente and h.get_status() != "cancelado"]
 
         if not meus_horarios:
             st.info("Você ainda não possui serviços agendados.")
@@ -59,11 +60,39 @@ class VisualizarServicosUI:
                 "Data": h.get_data().strftime("%d/%m/%Y %H:%M"),
                 "Confirmação": confirmacao,
                 "Serviço": nome_serv,
-                "Profissional": nome_prof
+                "Profissional": nome_prof,
+                "Status": h.get_status()
             })
 
         # --------------------------
-        # Exibe tabela formatada
+        # Exibe tabela com Streamlit
         # --------------------------
-        df = pd.DataFrame(dados, columns=["ID", "Data", "Confirmação", "Serviço", "Profissional"])
+        df = pd.DataFrame(dados)
         st.dataframe(df.style.hide(axis="index"), use_container_width=True)
+
+        # --------------------------
+        # Ações: Cancelar ou Reagendar
+        # --------------------------
+        st.subheader("Cancelar ou Reagendar Horário")
+        horario_ids = [h.get_id() for h in meus_horarios if h.get_status() not in ["cancelado", "remarcado"]]
+        if horario_ids:
+            id_selecionado = st.selectbox("Selecione o horário", horario_ids)
+
+            # Cancelar
+            if st.button("Cancelar Horário"):
+                try:
+                    View.horario_cancelar(id_selecionado, datetime.now())
+                    st.success("Horário cancelado com sucesso!")
+                except Exception as e:
+                    st.error(f"Erro: {e}")
+
+            # Reagendar
+            nova_data = st.time_input("Nova Data e Hora")
+            if st.button("Reagendar Horário"):
+                try:
+                    View.horario_reagendar(id_selecionado, nova_data)
+                    st.success("Horário reagendado com sucesso!")
+                except Exception as e:
+                    st.error(f"Erro: {e}")
+        else:
+            st.info("Nenhum horário disponível para cancelamento ou reagendamento.")

@@ -55,7 +55,8 @@ class ManterHorarioUI:
                 "Data e Hora": obj.get_data().strftime("%d/%m/%Y %H:%M"),
                 "Confirmado": "Sim" if obj.get_confirmado() else "Não",
                 "Cliente": cliente_nome,
-                "Serviço": servico_nome
+                "Serviço": servico_nome,
+                "Status": obj.get_status()
             })
 
         df = pd.DataFrame(dados)
@@ -131,8 +132,9 @@ class ManterHorarioUI:
         clientes = View.cliente_listar()
         servicos = View.servico_listar()
 
-        op = st.selectbox("Selecione o horário para atualizar", horarios,
-                          format_func=lambda h: f"{h.get_id()} - {h.get_data().strftime('%d/%m/%Y %H:%M')}")
+        op = st.selectbox("Selecione o horário", horarios,
+                          format_func=lambda h: f"{h.get_id()} - {h.get_data().strftime('%d/%m/%Y %H:%M')} - Status: {h.get_status()}")
+
         data = st.text_input("Nova data e horário (dd/mm/aaaa HH:MM)",
                              op.get_data().strftime("%d/%m/%Y %H:%M"))
         confirmado = st.checkbox("Confirmado", value=op.get_confirmado(),
@@ -150,6 +152,7 @@ class ManterHorarioUI:
 
         st.write(f"Profissional: **{usuario.get('nome', 'Você')}** (não alterável)")
 
+        # Atualizar
         if st.button("Atualizar"):
             id_cliente = cliente.get_id() if cliente else None
             id_servico = servico.get_codigo() if servico else None
@@ -158,8 +161,30 @@ class ManterHorarioUI:
                 data_obj = datetime.strptime(data, "%d/%m/%Y %H:%M")
                 View.horario_atualizar(op.get_id(), data_obj, confirmado, id_cliente, id_servico, id_prof)
                 st.success("Horário atualizado com sucesso!")
+                st.experimental_rerun()
             except ValueError:
                 st.error("Formato de data inválido. Use o formato dd/mm/aaaa HH:MM.")
+
+        # Cancelar
+        if st.button("Cancelar Horário"):
+            try:
+                View.horario_cancelar(op.get_id())
+                st.success("Horário cancelado com sucesso!")
+                st.experimental_rerun()
+            except ValueError as e:
+                st.error(str(e))
+
+        # Reagendar
+        nova_data_input = st.text_input("Nova data para reagendamento (dd/mm/aaaa HH:MM)", op.get_data().strftime("%d/%m/%Y %H:%M"),
+                                        key=f"reagendar_{op.get_id()}")
+        if st.button("Reagendar Horário"):
+            try:
+                nova_data = datetime.strptime(nova_data_input, "%d/%m/%Y %H:%M")
+                View.horario_reagendar(op.get_id(), nova_data)
+                st.success("Horário reagendado com sucesso!")
+                st.experimental_rerun()
+            except ValueError:
+                st.error("Formato de data inválido. Use dd/mm/aaaa HH:MM.")
 
     # =========================================================
     # EXCLUIR — apenas horários do profissional logado
@@ -191,4 +216,4 @@ class ManterHorarioUI:
             View.horario_excluir(op.get_id())
             st.success("Horário excluído com sucesso!")
             time.sleep(2)
-            st.rerun()
+            st.experimental_rerun()

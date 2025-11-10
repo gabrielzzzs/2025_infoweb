@@ -1,7 +1,12 @@
 import json
+from models.dao import DAO
 from models.cliente import ClienteDAO
 from models.horario import HorarioDAO
 
+
+# ============================================================
+# Classe Profissional (modelo)
+# ============================================================
 class Profissional:
     def __init__(self, id, nome, especialidade, conselho, email, senha):
         self.set_id(id)
@@ -67,99 +72,74 @@ class Profissional:
 
 
 # ============================================================
-# DAO - Data Access Object (Persistência em JSON)
+# DAO - Herdando da classe base DAO
 # ============================================================
-class ProfissionalDAO:
-    __arquivo = "profissionais.json"
-    __objetos = []
+class ProfissionalDAO(DAO):
+    def __init__(self):
+        super().__init__("profissionais.json")
+
+    def from_json(self, dic):
+        return Profissional.from_json(dic)
 
     # ---------- CRUD ----------
-    @classmethod
-    def inserir(cls, obj):
-        cls.abrir()
+    def inserir(self, obj):
+        self._objetos = self.abrir()
 
         # Valida e-mail duplicado (clientes + profissionais) e admin
         clientes = ClienteDAO.listar()
         for c in clientes:
-            if c.get_email().lower() == obj.get_email().lower() or obj.get_email().lower() == "admin":
+            if c.get_email().lower() == obj.get_email().lower() or "admin" in obj.get_email().lower():
                 raise ValueError("E-mail já cadastrado ou reservado para admin.")
-        for p in cls.__objetos:
+
+        for p in self._objetos:
             if p.get_email().lower() == obj.get_email().lower():
                 raise ValueError("E-mail já cadastrado.")
 
-        # ID
-        obj.set_id(max((p.get_id() for p in cls.__objetos), default=0) + 1)
-        cls.__objetos.append(obj)
-        cls.salvar()
+        obj.set_id(max((p.get_id() for p in self._objetos), default=0) + 1)
+        self._objetos.append(obj)
+        self.salvar()
 
-    @classmethod
-    def listar(cls):
-        cls.abrir()
-        return cls.__objetos
+    def listar(self):
+        return self.abrir()
 
-    @classmethod
-    def listar_id(cls, id):
-        cls.abrir()
-        for obj in cls.__objetos:
-            if obj.get_id() == id:
-                return obj
-        return None
+    def listar_id(self, id):
+        return next((p for p in self.abrir() if p.get_id() == id), None)
 
-    @classmethod
-    def atualizar(cls, obj):
-        cls.abrir()
+    def atualizar(self, obj):
+        self._objetos = self.abrir()
 
-        # Valida e-mail duplicado (clientes + profissionais) e admin
         clientes = ClienteDAO.listar()
         for c in clientes:
-            if c.get_email().lower() == obj.get_email().lower() or obj.get_email().lower() == "admin":
+            if c.get_email().lower() == obj.get_email().lower() or "admin" in obj.get_email().lower():
                 raise ValueError("E-mail já cadastrado ou reservado para admin.")
-        for p in cls.__objetos:
+
+        for p in self._objetos:
             if p.get_email().lower() == obj.get_email().lower() and p.get_id() != obj.get_id():
                 raise ValueError("E-mail já cadastrado.")
 
-        for i, p in enumerate(cls.__objetos):
+        for i, p in enumerate(self._objetos):
             if p.get_id() == obj.get_id():
-                cls.__objetos[i] = obj
-                cls.salvar()
+                self._objetos[i] = obj
+                self.salvar()
                 return
-        cls.salvar()
 
-    @classmethod
-    def excluir(cls, obj):
-        cls.abrir()
+        self.salvar()
+
+    def excluir(self, obj):
+        self._objetos = self.abrir()
 
         # Impede exclusão de profissional com horários cadastrados
         for h in HorarioDAO.listar():
             if h.get_id_profissional() == obj.get_id():
                 raise ValueError("Não é possível excluir profissional com horários cadastrados.")
 
-        cls.__objetos = [p for p in cls.__objetos if p.get_id() != obj.get_id()]
-        cls.salvar()
-
-    # ---------- Persistência ----------
-    @classmethod
-    def abrir(cls):
-        cls.__objetos = []
-        try:
-            with open(cls.__arquivo, "r", encoding="utf-8") as arquivo:
-                conteudo = arquivo.read().strip()
-                if conteudo:
-                    list_dic = json.loads(conteudo)
-                    cls.__objetos = [Profissional.from_json(dic) for dic in list_dic]
-        except (FileNotFoundError, json.JSONDecodeError):
-            pass
-
-    @classmethod
-    def salvar(cls):
-        with open(cls.__arquivo, "w", encoding="utf-8") as arquivo:
-            json.dump([obj.to_json() for obj in cls.__objetos], arquivo, ensure_ascii=False, indent=4)
+        self._objetos = [p for p in self._objetos if p.get_id() != obj.get_id()]
+        self.salvar()
 
     # ---------- Autenticação ----------
-    @classmethod
-    def autenticar(cls, email, senha):
-        cls.abrir()
-        for p in cls.__objetos:
+    def autenticar(self, email, senha):
+        self._objetos = self.abrir()
+        for p in self._objetos:
             if p.get_email() == email and p.get_senha() == senha:
                 return p
         return None
