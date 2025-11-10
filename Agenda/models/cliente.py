@@ -17,10 +17,23 @@ class Cliente:
 
     # -------- Setters --------
     def set_id(self, id): self.__id = id
-    def set_nome(self, nome): self.__nome = nome
-    def set_email(self, email): self.__email = email
+
+    def set_nome(self, nome):
+        if not nome or nome.strip() == "":
+            raise ValueError("O nome do cliente não pode ser vazio.")
+        self.__nome = nome
+
+    def set_email(self, email):
+        if not email or email.strip() == "":
+            raise ValueError("O e-mail do cliente não pode ser vazio.")
+        self.__email = email
+
     def set_fone(self, fone): self.__fone = fone
-    def set_senha(self, senha): self.__senha = senha
+
+    def set_senha(self, senha):
+        if not senha or senha.strip() == "":
+            raise ValueError("A senha do cliente não pode ser vazia.")
+        self.__senha = senha
 
     # -------- JSON --------
     def to_json(self):
@@ -34,7 +47,6 @@ class Cliente:
 
     @staticmethod
     def from_json(dic):
-        # compatível com versões antigas do arquivo
         return Cliente(
             dic.get("id", 0),
             dic.get("nome", ""),
@@ -47,48 +59,11 @@ class Cliente:
         return f"{self.__id} - {self.__nome} - {self.__email} - {self.__fone}"
 
 # ============================================================
-# DAO - Data Access Object (Persistência em JSON)
+# DAO - Persistência em JSON
 # ============================================================
 class ClienteDAO:
     __arquivo = "clientes.json"
     __objetos = []
-
-    @classmethod
-    def inserir(cls, obj):
-        cls.abrir()
-        novo_id = max((c.get_id() for c in cls.__objetos), default=0) + 1
-        obj.set_id(novo_id)
-        cls.__objetos.append(obj)
-        cls.salvar()
-
-    @classmethod
-    def listar(cls):
-        cls.abrir()
-        return cls.__objetos
-
-    @classmethod
-    def listar_id(cls, id):
-        cls.abrir()
-        for obj in cls.__objetos:
-            if obj.get_id() == id:
-                return obj
-        return None
-
-    @classmethod
-    def atualizar(cls, obj):
-        cls.abrir()
-        for i, c in enumerate(cls.__objetos):
-            if c.get_id() == obj.get_id():
-                cls.__objetos[i] = obj
-                cls.salvar()
-                return
-        cls.salvar()
-
-    @classmethod
-    def excluir(cls, obj):
-        cls.abrir()
-        cls.__objetos = [c for c in cls.__objetos if c.get_id() != obj.get_id()]
-        cls.salvar()
 
     @classmethod
     def abrir(cls):
@@ -107,7 +82,43 @@ class ClienteDAO:
         with open(cls.__arquivo, "w", encoding="utf-8") as f:
             json.dump([obj.to_json() for obj in cls.__objetos], f, ensure_ascii=False, indent=4)
 
-    # -------- Autenticação --------
+    @classmethod
+    def listar(cls):
+        cls.abrir()
+        return cls.__objetos
+
+    @classmethod
+    def listar_id(cls, id):
+        cls.abrir()
+        for obj in cls.__objetos:
+            if obj.get_id() == id:
+                return obj
+        return None
+
+    @classmethod
+    def inserir(cls, obj):
+        cls.abrir()
+        novo_id = max((c.get_id() for c in cls.__objetos), default=0) + 1
+        obj.set_id(novo_id)
+        cls.__objetos.append(obj)
+        cls.salvar()
+
+    @classmethod
+    def atualizar(cls, obj):
+        cls.abrir()
+        for i, c in enumerate(cls.__objetos):
+            if c.get_id() == obj.get_id():
+                cls.__objetos[i] = obj
+                cls.salvar()
+                return
+        cls.salvar()
+
+    @classmethod
+    def excluir(cls, obj):
+        cls.abrir()
+        cls.__objetos = [c for c in cls.__objetos if c.get_id() != obj.get_id()]
+        cls.salvar()
+
     @classmethod
     def autenticar(cls, email, senha):
         cls.abrir()

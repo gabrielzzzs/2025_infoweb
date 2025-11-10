@@ -14,7 +14,9 @@ class LoginUI:
             usuario = None
             tipo_usuario = None
 
+            # --------------------------
             # Verifica se é profissional
+            # --------------------------
             try:
                 with open("profissionais.json", "r", encoding="utf-8") as f:
                     profissionais = json.load(f)
@@ -26,7 +28,9 @@ class LoginUI:
                 usuario = profissional
                 tipo_usuario = "profissional"
 
+            # --------------------------
             # Se não for profissional, tenta cliente
+            # --------------------------
             if not usuario:
                 try:
                     with open("clientes.json", "r", encoding="utf-8") as f:
@@ -39,17 +43,21 @@ class LoginUI:
                     usuario = cliente
                     tipo_usuario = "cliente"
 
+            # --------------------------
             # Se achou usuário
+            # --------------------------
             if usuario:
+                # Reconhece Admin pelo e-mail
                 if tipo_usuario == "cliente" and usuario["email"].lower() == "admin@admin.com":
                     tipo_usuario = "admin"
 
-                # Salva o usuário logado
+                # Salva o usuário logado, incluindo o e-mail
                 with open("usuario_logado.json", "w", encoding="utf-8") as f:
                     json.dump({
                         "id": usuario["id"],
                         "nome": usuario["nome"],
-                        "tipo": tipo_usuario
+                        "tipo": tipo_usuario,
+                        "email": usuario["email"]  # ✅ adicionado para PerfilAdminUI
                     }, f, ensure_ascii=False, indent=4)
 
                 st.success(f"Login bem-sucedido. Bem-vindo, {usuario['nome']} ({tipo_usuario}).")

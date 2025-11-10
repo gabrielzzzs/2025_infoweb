@@ -18,7 +18,7 @@ class PerfilUI:
 
         tipo = usuario.get("tipo")
 
-        # Exibe e permite editar conforme o tipo
+        # ----- Profissional -----
         if tipo == "profissional":
             prof = View.profissional_listar_id(usuario["id"])
             if not prof:
@@ -34,7 +34,10 @@ class PerfilUI:
             if st.button("Salvar alterações"):
                 View.profissional_atualizar(prof.get_id(), nome, especialidade, conselho, email, senha)
                 st.success("Perfil atualizado com sucesso!")
+                # Limpa senha
+                senha = ""
 
+        # ----- Cliente e Admin -----
         elif tipo == "cliente" or tipo == "admin":
             cli = View.cliente_listar_id(usuario["id"])
             if not cli:
@@ -42,16 +45,38 @@ class PerfilUI:
                 return
 
             nome = st.text_input("Nome", cli.get_nome())
-            email = st.text_input("E-mail", cli.get_email())
             fone = st.text_input("Telefone", cli.get_fone())
-            senha = st.text_input("Senha", cli.get_senha(), type="password")
 
-            if st.button("Salvar alterações"):
-                View.cliente_atualizar(cli.get_id(), nome, email, fone, senha)
-                st.success("Perfil atualizado com sucesso!")
+            # Email editável somente para cliente, admin não pode alterar
+            if tipo == "admin":
+                email = cli.get_email()
+                st.text_input("E-mail do Admin (não pode ser alterado)", email, disabled=True)
+            else:
+                email = st.text_input("E-mail", cli.get_email())
 
-        # Botão "Sair" (somente nesta página)
+            senha_atual = st.text_input("Senha atual", type="password")
+            nova_senha = st.text_input("Nova senha", type="password")
+            confirmar_senha = st.text_input("Confirmar nova senha", type="password")
+
+            if st.button("Alterar senha"):
+                # Validação simples
+                if senha_atual != cli.get_senha():
+                    st.error("Senha atual incorreta.")
+                elif nova_senha != confirmar_senha:
+                    st.error("Nova senha e confirmação não coincidem.")
+                elif not nova_senha:
+                    st.error("A nova senha não pode ser vazia.")
+                else:
+                    View.cliente_atualizar(cli.get_id(), nome, cli.get_email(), fone, nova_senha)
+                    st.success("Senha alterada com sucesso!")
+                    # Limpar campos
+                    senha_atual = ""
+                    nova_senha = ""
+                    confirmar_senha = ""
+
+        # ----- Botão Sair -----
         if os.path.exists("usuario_logado.json"):
             if st.button("Sair da conta"):
                 os.remove("usuario_logado.json")
                 st.info("Você saiu do sistema.")
+                st.rerun() # volta para menu de login

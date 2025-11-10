@@ -1,5 +1,6 @@
 {
-    "id": 1,
-    "nome": "guxtavo",
-    "tipo": "profissional"
+    "id": 7,
+    "nome": "Admin",
+    "tipo": "admin",
+    "email": "admin@admin.com"
 }

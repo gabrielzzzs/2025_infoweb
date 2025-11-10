@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from views import View
 import time
+import json
 from datetime import datetime
 
 class ManterHorarioUI:
@@ -18,40 +19,71 @@ class ManterHorarioUI:
         with tab4:
             ManterHorarioUI.excluir()
 
+    # =========================================================
+    # LISTAR — mostra apenas horários do profissional logado
+    # =========================================================
     @staticmethod
     def listar():
-        horarios = View.horario_listar()
-        if len(horarios) == 0:
-            st.write("Nenhum horário cadastrado")
-        else:
-            dados = []
-            for obj in horarios:
-                cliente = View.cliente_listar_id(obj.get_id_cliente())
-                servico = View.servico_listar_id(obj.get_id_servico())
-                profissional = View.profissional_listar_id(obj.get_id_profissional())
+        try:
+            with open("usuario_logado.json", "r", encoding="utf-8") as f:
+                usuario = json.load(f)
+        except FileNotFoundError:
+            st.warning("Acesso restrito. Faça login como profissional.")
+            return
 
-                cliente_nome = cliente.get_nome() if cliente else ""
-                servico_nome = servico.get_nome() if servico else ""
-                profissional_nome = profissional.get_nome() if profissional else ""
+        if usuario.get("tipo") != "profissional":
+            st.warning("Acesso restrito. Esta página é apenas para profissionais.")
+            return
 
-                dados.append({
-                    "ID": obj.get_id(),
-                    "Data e Hora": obj.get_data().strftime("%d/%m/%Y %H:%M"),
-                    "Confirmado": "Sim" if obj.get_confirmado() else "Não",
-                    "Cliente": cliente_nome,
-                    "Serviço": servico_nome,
-                    "Profissional": profissional_nome
-                })
+        id_prof = usuario["id"]
+        horarios = View.horario_listar_por_profissional(id_prof)
 
-            df = pd.DataFrame(dados)
-            st.dataframe(df)
+        if not horarios:
+            st.write("Nenhum horário cadastrado por você.")
+            return
 
+        dados = []
+        for obj in horarios:
+            cliente = View.cliente_listar_id(obj.get_id_cliente())
+            servico = View.servico_listar_id(obj.get_id_servico())
 
+            cliente_nome = cliente.get_nome() if cliente else ""
+            servico_nome = servico.get_nome() if servico else ""
+
+            dados.append({
+                "ID": obj.get_id(),
+                "Data e Hora": obj.get_data().strftime("%d/%m/%Y %H:%M"),
+                "Confirmado": "Sim" if obj.get_confirmado() else "Não",
+                "Cliente": cliente_nome,
+                "Serviço": servico_nome
+            })
+
+        df = pd.DataFrame(dados)
+        st.dataframe(df)
+
+    # =========================================================
+    # INSERIR — profissional é fixo (logado)
+    # =========================================================
     @staticmethod
     def inserir():
+        try:
+            with open("usuario_logado.json", "r", encoding="utf-8") as f:
+                usuario = json.load(f)
+        except FileNotFoundError:
+            st.warning("Acesso restrito. Faça login como profissional.")
+            return
+
+        if usuario.get("tipo") != "profissional":
+            st.warning("Acesso restrito. Esta página é apenas para profissionais.")
+            return
+
+        id_prof = usuario["id"]
+        nome_prof = usuario.get("nome", "Profissional")
+
         clientes = View.cliente_listar()
         servicos = View.servico_listar()
-        profissionais = View.profissional_listar()
+
+        st.write(f"Profissional: **{nome_prof}**")
 
         data = st.text_input("Informe a data e horário do serviço (dd/mm/aaaa HH:MM)",
                              datetime.now().strftime("%d/%m/%Y %H:%M"))
@@ -61,74 +93,102 @@ class ManterHorarioUI:
                                format_func=lambda c: c.get_nome())
         servico = st.selectbox("Informe o serviço", servicos, index=None,
                                format_func=lambda s: s.get_nome())
-        profissional = st.selectbox("Informe o profissional", profissionais, index=None,
-                                    format_func=lambda p: p.get_nome())
 
         if st.button("Inserir"):
             id_cliente = cliente.get_id() if cliente else None
             id_servico = servico.get_codigo() if servico else None
-            id_profissional = profissional.get_id() if profissional else None
 
             try:
                 data_obj = datetime.strptime(data, "%d/%m/%Y %H:%M")
-                View.horario_inserir(data_obj, confirmado, id_cliente, id_servico, id_profissional)
+                View.horario_inserir(data_obj, confirmado, id_cliente, id_servico, id_prof)
                 st.success("Horário inserido com sucesso!")
             except ValueError:
                 st.error("Formato de data inválido. Use o formato dd/mm/aaaa HH:MM.")
 
+    # =========================================================
+    # ATUALIZAR — profissional só vê e altera os próprios horários
+    # =========================================================
     @staticmethod
     def atualizar():
-        horarios = View.horario_listar()
-        if len(horarios) == 0:
-            st.write("Nenhum horário cadastrado")
-        else:
-            clientes = View.cliente_listar()
-            servicos = View.servico_listar()
-            profissionais = View.profissional_listar()
+        try:
+            with open("usuario_logado.json", "r", encoding="utf-8") as f:
+                usuario = json.load(f)
+        except FileNotFoundError:
+            st.warning("Acesso restrito. Faça login como profissional.")
+            return
 
-            op = st.selectbox("Selecione o horário para atualizar", horarios,
-                              format_func=lambda h: f"{h.get_id()} - {h.get_data().strftime('%d/%m/%Y %H:%M')}")
-            data = st.text_input("Nova data e horário (dd/mm/aaaa HH:MM)",
-                                 op.get_data().strftime("%d/%m/%Y %H:%M"))
-            confirmado = st.checkbox("Confirmado", value=op.get_confirmado(),
-                                     key=f"atualizar_confirmado_{op.get_id()}")
+        if usuario.get("tipo") != "profissional":
+            st.warning("Acesso restrito. Esta página é apenas para profissionais.")
+            return
 
-            cliente_sel = next((c for c in clientes if c.get_id() == op.get_id_cliente()), None)
-            servico_sel = next((s for s in servicos if s.get_codigo() == op.get_id_servico()), None)
-            prof_sel = next((p for p in profissionais if p.get_id() == op.get_id_profissional()), None)
+        id_prof = usuario["id"]
 
-            cliente = st.selectbox("Novo cliente", clientes,
-                                   index=clientes.index(cliente_sel) if cliente_sel else None,
-                                   format_func=lambda c: c.get_nome())
-            servico = st.selectbox("Novo serviço", servicos,
-                                   index=servicos.index(servico_sel) if servico_sel else None,
-                                   format_func=lambda s: s.get_nome())
-            profissional = st.selectbox("Novo profissional", profissionais,
-                                        index=profissionais.index(prof_sel) if prof_sel else None,
-                                        format_func=lambda p: p.get_nome())
+        horarios = View.horario_listar_por_profissional(id_prof)
+        if not horarios:
+            st.write("Nenhum horário cadastrado por você.")
+            return
 
-            if st.button("Atualizar"):
-                id_cliente = cliente.get_id() if cliente else None
-                id_servico = servico.get_codigo() if servico else None
-                id_profissional = profissional.get_id() if profissional else None
+        clientes = View.cliente_listar()
+        servicos = View.servico_listar()
 
-                try:
-                    data_obj = datetime.strptime(data, "%d/%m/%Y %H:%M")
-                    View.horario_atualizar(op.get_id(), data_obj, confirmado, id_cliente, id_servico, id_profissional)
-                    st.success("Horário atualizado com sucesso!")
-                except ValueError:
-                    st.error("Formato de data inválido. Use o formato dd/mm/aaaa HH:MM.")
+        op = st.selectbox("Selecione o horário para atualizar", horarios,
+                          format_func=lambda h: f"{h.get_id()} - {h.get_data().strftime('%d/%m/%Y %H:%M')}")
+        data = st.text_input("Nova data e horário (dd/mm/aaaa HH:MM)",
+                             op.get_data().strftime("%d/%m/%Y %H:%M"))
+        confirmado = st.checkbox("Confirmado", value=op.get_confirmado(),
+                                 key=f"atualizar_confirmado_{op.get_id()}")
 
+        cliente_sel = next((c for c in clientes if c.get_id() == op.get_id_cliente()), None)
+        servico_sel = next((s for s in servicos if s.get_codigo() == op.get_id_servico()), None)
+
+        cliente = st.selectbox("Novo cliente", clientes,
+                               index=clientes.index(cliente_sel) if cliente_sel else None,
+                               format_func=lambda c: c.get_nome())
+        servico = st.selectbox("Novo serviço", servicos,
+                               index=servicos.index(servico_sel) if servico_sel else None,
+                               format_func=lambda s: s.get_nome())
+
+        st.write(f"Profissional: **{usuario.get('nome', 'Você')}** (não alterável)")
+
+        if st.button("Atualizar"):
+            id_cliente = cliente.get_id() if cliente else None
+            id_servico = servico.get_codigo() if servico else None
+
+            try:
+                data_obj = datetime.strptime(data, "%d/%m/%Y %H:%M")
+                View.horario_atualizar(op.get_id(), data_obj, confirmado, id_cliente, id_servico, id_prof)
+                st.success("Horário atualizado com sucesso!")
+            except ValueError:
+                st.error("Formato de data inválido. Use o formato dd/mm/aaaa HH:MM.")
+
+    # =========================================================
+    # EXCLUIR — apenas horários do profissional logado
+    # =========================================================
     @staticmethod
     def excluir():
-        horarios = View.horario_listar()
-        if len(horarios) == 0:
-            st.write("Nenhum horário cadastrado")
-        else:
-            op = st.selectbox("Selecione o horário para excluir", horarios,
-                              format_func=lambda h: f"{h.get_id()} - {h.get_data().strftime('%d/%m/%Y %H:%M')}")
-            if st.button("Excluir"):
-                View.horario_excluir(op.get_id())
-                st.success("Horário excluído com sucesso!")
-                time.sleep(2)
-                st.rerun()
+        try:
+            with open("usuario_logado.json", "r", encoding="utf-8") as f:
+                usuario = json.load(f)
+        except FileNotFoundError:
+            st.warning("Acesso restrito. Faça login como profissional.")
+            return
+
+        if usuario.get("tipo") != "profissional":
+            st.warning("Acesso restrito. Esta página é apenas para profissionais.")
+            return
+
+        id_prof = usuario["id"]
+
+        horarios = View.horario_listar_por_profissional(id_prof)
+        if not horarios:
+            st.write("Nenhum horário cadastrado por você.")
+            return
+
+        op = st.selectbox("Selecione o horário para excluir", horarios,
+                          format_func=lambda h: f"{h.get_id()} - {h.get_data().strftime('%d/%m/%Y %H:%M')}")
+
+        if st.button("Excluir"):
+            View.horario_excluir(op.get_id())
+            st.success("Horário excluído com sucesso!")
+            time.sleep(2)
+            st.rerun()

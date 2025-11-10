@@ -1,4 +1,6 @@
 import json
+from models.cliente import ClienteDAO
+from models.horario import HorarioDAO
 
 class Profissional:
     def __init__(self, id, nome, especialidade, conselho, email, senha):
@@ -19,11 +21,24 @@ class Profissional:
 
     # ----------- Setters -----------
     def set_id(self, id): self.__id = id
-    def set_nome(self, nome): self.__nome = nome
+
+    def set_nome(self, nome):
+        if not nome:
+            raise ValueError("O nome do profissional não pode ser vazio.")
+        self.__nome = nome
+
     def set_especialidade(self, esp): self.__especialidade = esp
     def set_conselho(self, conselho): self.__conselho = conselho
-    def set_email(self, email): self.__email = email
-    def set_senha(self, senha): self.__senha = senha
+
+    def set_email(self, email):
+        if not email:
+            raise ValueError("O e-mail do profissional não pode ser vazio.")
+        self.__email = email
+
+    def set_senha(self, senha):
+        if not senha:
+            raise ValueError("A senha do profissional não pode ser vazia.")
+        self.__senha = senha
 
     # ----------- Serialização -----------
     def to_json(self):
@@ -39,12 +54,17 @@ class Profissional:
     @staticmethod
     def from_json(dic):
         return Profissional(
-            dic["id"], dic["nome"], dic["especialidade"],
-            dic["conselho"], dic["email"], dic["senha"]
+            dic.get("id", 0),
+            dic.get("nome", ""),
+            dic.get("especialidade", ""),
+            dic.get("conselho", ""),
+            dic.get("email", ""),
+            dic.get("senha", "")
         )
 
     def __str__(self):
         return f"{self.__id} - {self.__nome} ({self.__especialidade}) - {self.__conselho} - {self.__email}"
+
 
 # ============================================================
 # DAO - Data Access Object (Persistência em JSON)
@@ -57,8 +77,18 @@ class ProfissionalDAO:
     @classmethod
     def inserir(cls, obj):
         cls.abrir()
-        id = max((p.get_id() for p in cls.__objetos), default=0) + 1
-        obj.set_id(id)
+
+        # Valida e-mail duplicado (clientes + profissionais) e admin
+        clientes = ClienteDAO.listar()
+        for c in clientes:
+            if c.get_email().lower() == obj.get_email().lower() or obj.get_email().lower() == "admin":
+                raise ValueError("E-mail já cadastrado ou reservado para admin.")
+        for p in cls.__objetos:
+            if p.get_email().lower() == obj.get_email().lower():
+                raise ValueError("E-mail já cadastrado.")
+
+        # ID
+        obj.set_id(max((p.get_id() for p in cls.__objetos), default=0) + 1)
         cls.__objetos.append(obj)
         cls.salvar()
 
@@ -78,6 +108,16 @@ class ProfissionalDAO:
     @classmethod
     def atualizar(cls, obj):
         cls.abrir()
+
+        # Valida e-mail duplicado (clientes + profissionais) e admin
+        clientes = ClienteDAO.listar()
+        for c in clientes:
+            if c.get_email().lower() == obj.get_email().lower() or obj.get_email().lower() == "admin":
+                raise ValueError("E-mail já cadastrado ou reservado para admin.")
+        for p in cls.__objetos:
+            if p.get_email().lower() == obj.get_email().lower() and p.get_id() != obj.get_id():
+                raise ValueError("E-mail já cadastrado.")
+
         for i, p in enumerate(cls.__objetos):
             if p.get_id() == obj.get_id():
                 cls.__objetos[i] = obj
@@ -88,6 +128,12 @@ class ProfissionalDAO:
     @classmethod
     def excluir(cls, obj):
         cls.abrir()
+
+        # Impede exclusão de profissional com horários cadastrados
+        for h in HorarioDAO.listar():
+            if h.get_id_profissional() == obj.get_id():
+                raise ValueError("Não é possível excluir profissional com horários cadastrados.")
+
         cls.__objetos = [p for p in cls.__objetos if p.get_id() != obj.get_id()]
         cls.salvar()
 
@@ -115,5 +161,5 @@ class ProfissionalDAO:
         cls.abrir()
         for p in cls.__objetos:
             if p.get_email() == email and p.get_senha() == senha:
-                return p  # retorna o profissional autenticado
+                return p
         return None

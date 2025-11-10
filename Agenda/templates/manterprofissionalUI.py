@@ -1,20 +1,28 @@
 import streamlit as st
-from models.profissional import Profissional, ProfissionalDAO
+from views import View
+from models.profissional import Profissional
 
 class ManterProfissionalUI:
     @staticmethod
     def main():
-        st.header("Cadastro de Profissionais 👨‍⚕️")
+        st.header("Cadastro de Profissionais")
+        abas = st.tabs(["Inserir", "Listar", "Atualizar", "Excluir"])
 
-        tab1, tab2, tab3, tab4 = st.tabs(["Inserir", "Listar", "Atualizar", "Excluir"])
+        def tratar(acao, func, *args):
+            """Executa uma ação com tratamento de erros."""
+            try:
+                func(*args)
+                st.success(f"Profissional {acao} com sucesso!")
+            except ValueError as e:
+                st.error(f"Erro: {e}")
+            except Exception as e:
+                st.error(f"Ocorreu um erro inesperado: {e}")
 
-        # --------------------------
-        # INSERIR
-        # --------------------------
-        with tab1:
+
+        with abas[0]:
             nome = st.text_input("Nome")
-            especialidade = st.text_input("Especialidade")
-            conselho = st.text_input("Conselho Profissional (ex: CRM, CRP, etc.)")
+            esp = st.text_input("Especialidade")
+            cons = st.text_input("Conselho Profissional (CRM, CRP...)")
             email = st.text_input("E-mail")
             senha = st.text_input("Senha", type="password")
 
@@ -22,58 +30,45 @@ class ManterProfissionalUI:
                 if not nome or not email or not senha:
                     st.error("Preencha pelo menos Nome, E-mail e Senha.")
                 else:
-                    obj = Profissional(0, nome, especialidade, conselho, email, senha)
-                    ProfissionalDAO.inserir(obj)
-                    st.success("✅ Profissional inserido com sucesso!")
+                    tratar("inserido", View.profissional_inserir, nome, esp, cons, email, senha)
 
-        # --------------------------
-        # LISTAR
-        # --------------------------
-        with tab2:
-            lista = ProfissionalDAO.listar()
-            if len(lista) == 0:
-                st.info("Nenhum profissional cadastrado.")
-            else:
-                for obj in lista:
-                    st.write(obj)
+        with abas[1]:
+            try:
+                lista = View.profissional_listar()
+                if not lista:
+                    st.info("Nenhum profissional cadastrado.")
+                else:
+                    for p in lista:
+                        st.write(p)
+            except Exception as e:
+                st.error(f"Erro ao listar: {e}")
 
-        # --------------------------
-        # ATUALIZAR
-        # --------------------------
-        with tab3:
-            lista = ProfissionalDAO.listar()
-            if len(lista) == 0:
-                st.info("Nenhum profissional cadastrado.")
-            else:
-                op = st.selectbox(
-                    "Selecione o profissional",
-                    lista,
-                    format_func=lambda p: f"{p.get_nome()} ({p.get_especialidade()})"
-                )
-                nome = st.text_input("Nome", op.get_nome())
-                especialidade = st.text_input("Especialidade", op.get_especialidade())
-                conselho = st.text_input("Conselho", op.get_conselho())
-                email = st.text_input("E-mail", op.get_email())
-                senha = st.text_input("Senha", op.get_senha(), type="password")
+        with abas[2]:
+            try:
+                lista = View.profissional_listar()
+                if not lista:
+                    st.info("Nenhum profissional cadastrado.")
+                else:
+                    p = st.selectbox("Selecione o profissional", lista, format_func=lambda x: f"{x.get_nome()} ({x.get_especialidade()})")
+                    nome = st.text_input("Nome", p.get_nome())
+                    esp = st.text_input("Especialidade", p.get_especialidade())
+                    cons = st.text_input("Conselho", p.get_conselho())
+                    email = st.text_input("E-mail", p.get_email())
+                    senha = st.text_input("Senha", p.get_senha(), type="password")
 
-                if st.button("Atualizar"):
-                    obj = Profissional(op.get_id(), nome, especialidade, conselho, email, senha)
-                    ProfissionalDAO.atualizar(obj)
-                    st.success("✅ Profissional atualizado com sucesso!")
+                    if st.button("Atualizar"):
+                        tratar("atualizado", View.profissional_atualizar, p.get_id(), nome, esp, cons, email, senha)
+            except Exception as e:
+                st.error(f"Erro ao carregar: {e}")
 
-        # --------------------------
-        # EXCLUIR
-        # --------------------------
-        with tab4:
-            lista = ProfissionalDAO.listar()
-            if len(lista) == 0:
-                st.info("Nenhum profissional cadastrado.")
-            else:
-                op = st.selectbox(
-                    "Selecione o profissional para excluir",
-                    lista,
-                    format_func=lambda p: f"{p.get_nome()} ({p.get_especialidade()})"
-                )
-                if st.button("Excluir"):
-                    ProfissionalDAO.excluir(op)
-                    st.success("🗑️ Profissional excluído com sucesso!")
+        with abas[3]:
+            try:
+                lista = View.profissional_listar()
+                if not lista:
+                    st.info("Nenhum profissional cadastrado.")
+                else:
+                    p = st.selectbox("Selecione o profissional para excluir", lista, format_func=lambda x: f"{x.get_nome()} ({x.get_especialidade()})")
+                    if st.button("Excluir"):
+                        tratar("excluído", View.profissional_excluir, p.get_id())
+            except Exception as e:
+                st.error(f"Erro ao carregar: {e}")

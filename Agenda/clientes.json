@@ -4,29 +4,16 @@
         "nome": "Gilbert",
         "email": "gilbert@email.com",
         "fone": "123456789",
-        "senha": ""
+        "senha": "123456"
     },
     {
         "id": 2,
         "nome": "Azevedo",
         "email": "azevedo@email.com",
         "fone": "987654321",
-        "senha": ""
+        "senha": "12345"
     },
-    {
-        "id": 3,
-        "nome": "luis",
-        "email": "gustavo@gmail.com",
-        "fone": "8433375579484",
-        "senha": ""
-    },
-    {
-        "id": 4,
-        "nome": "luis",
-        "email": "gustavo@gmail.com",
-        "fone": "8433375579484",
-        "senha": ""
-    },
+
     {
         "id": 5,
         "nome": "emily",
@@ -40,5 +27,26 @@
         "email": "sarasaracoraçãocomburaquinhos@gmail.com",
         "fone": "789456123",
         "senha": "741852"
+    },
+    {
+        "id": 7,
+        "nome": "Admin",
+        "email": "admin@admin.com",
+        "fone": "",
+        "senha": "admin12345"
+    },
+    {
+        "id": 8,
+        "nome": "lucas",
+        "email": "lucas@lucas",
+        "fone": "",
+        "senha": "123456"
+    },
+    {
+        "id": 9,
+        "nome": "jane",
+        "email": "jane@jane",
+        "fone": "1234567",
+        "senha": "12345"
     }
 ]
