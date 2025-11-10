@@ -46,9 +46,12 @@ class View:
         ClienteDAO.atualizar(Cliente(id, nome, email, fone, senha))
 
     @staticmethod
-    def cliente_listar(): return ClienteDAO.listar()
+    def cliente_listar():
+        return ClienteDAO.listar()
+
     @staticmethod
-    def cliente_listar_id(id): return ClienteDAO.listar_id(id)
+    def cliente_listar_id(id):
+        return ClienteDAO.listar_id(id)
 
     @staticmethod
     def cliente_excluir(id):
@@ -61,7 +64,7 @@ class View:
     def cliente_autenticar(email, senha):
         return ClienteDAO.autenticar(email, senha)
 
-    # ----------- Profissional -----------
+
 
     @staticmethod
     def profissional_inserir(nome, especialidade, conselho, email, senha):
@@ -69,9 +72,12 @@ class View:
         ProfissionalDAO.inserir(Profissional(0, nome, especialidade, conselho, email, senha))
 
     @staticmethod
-    def profissional_listar(): return ProfissionalDAO.listar()
+    def profissional_listar():
+        return ProfissionalDAO.listar()
+
     @staticmethod
-    def profissional_listar_id(id): return ProfissionalDAO.listar_id(id)
+    def profissional_listar_id(id):
+        return ProfissionalDAO.listar_id(id)
 
     @staticmethod
     def profissional_atualizar(id, nome, especialidade, conselho, email, senha):
@@ -92,15 +98,24 @@ class View:
     # ----------- Serviço -----------
 
     @staticmethod
-    def servico_inserir(nome, preco): ServicoDAO().inserir(Servico(0, nome, preco))
+    def servico_inserir(nome, preco):
+        ServicoDAO().inserir(Servico(0, nome, preco))
+
     @staticmethod
-    def servico_listar(): return ServicoDAO().listar()
+    def servico_listar():
+        return ServicoDAO().listar()
+
     @staticmethod
-    def servico_listar_id(id): return ServicoDAO().listar_id(id)
+    def servico_listar_id(id):
+        return ServicoDAO().listar_id(id)
+
     @staticmethod
-    def servico_atualizar(id, nome, preco): ServicoDAO().atualizar(Servico(id, nome, preco))
+    def servico_atualizar(id, nome, preco):
+        ServicoDAO().atualizar(Servico(id, nome, preco))
+
     @staticmethod
-    def servico_excluir(id): ServicoDAO().excluir(Servico(id, "", 0.0))
+    def servico_excluir(id):
+        ServicoDAO().excluir(Servico(id, "", 0.0))
 
     # ----------- Horário -----------
 
@@ -108,28 +123,38 @@ class View:
     def horario_inserir(data, confirmado, id_cliente, id_servico, id_profissional):
         for h in HorarioDAO.listar():
             if (
-            h.get_data() == data
-            and h.get_id_profissional() == id_profissional
-            and h.get_id_cliente() is not None
-        ):
+                h.get_data() == data
+                and h.get_id_profissional() == id_profissional
+                and h.get_id_cliente() is not None
+            ):
                 raise ValueError("Este horário já foi agendado por outro cliente.")
         HorarioDAO.inserir(Horario(0, data, confirmado, id_cliente, id_servico, id_profissional))
 
     @staticmethod
-    def horario_listar(): return HorarioDAO.listar()
+    def horario_listar():
+        return HorarioDAO.listar()
 
     @staticmethod
     def horario_listar_por_profissional(id_profissional):
-        horarios = [h for h in HorarioDAO.listar() if h.get_id_profissional() == id_profissional]
-        return horarios
-    
+        return [h for h in HorarioDAO.listar() if h.get_id_profissional() == id_profissional]
+
+    # ✅ NOVA FUNÇÃO
     @staticmethod
-    def horario_listar_id(id): return HorarioDAO.listar_id(id)
+    def horario_listar_por_cliente(id_cliente):
+        """Lista todos os horários agendados por um cliente específico."""
+        return [h for h in HorarioDAO.listar() if h.get_id_cliente() == id_cliente]
+
+    @staticmethod
+    def horario_listar_id(id):
+        return HorarioDAO.listar_id(id)
+
     @staticmethod
     def horario_atualizar(id, data, confirmado, id_cliente, id_servico, id_profissional):
         HorarioDAO.atualizar(Horario(id, data, confirmado, id_cliente, id_servico, id_profissional))
+
     @staticmethod
-    def horario_excluir(id): HorarioDAO.excluir(Horario(id, None, False, None, None, None))
+    def horario_excluir(id):
+        HorarioDAO.excluir(Horario(id, None, False, None, None, None))
 
     # ----------- Abrir Agenda -----------
 

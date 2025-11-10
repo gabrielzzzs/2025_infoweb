@@ -8,7 +8,7 @@ from templates.manterhorarioUI import ManterHorarioUI
 from templates.loginUI import LoginUI
 from templates.perfilUI import PerfilUI
 from templates.perfiladminUI import PerfilAdminUI
-from templates.perfilClienteUI import PerfilClienteUI 
+from templates.perfilClienteUI import PerfilClienteUI
 from templates.abriragendaUI import AbrirAgendaUI
 from templates.visualizaragendaUI import VisualizarAgendaUI
 from templates.visualizarservicosUI import VisualizarServicosUI
@@ -44,7 +44,6 @@ class IndexUI:
             if tipo_usuario == "profissional":
                 opcoes = [
                     "Cadastro de Serviços",
-                    "Cadastro de Horários",
                     "Abrir Minha Agenda",
                     "Visualizar Minha Agenda",
                     "Confirmar Serviços",
@@ -61,7 +60,7 @@ class IndexUI:
                     "Cadastro de Clientes",
                     "Cadastro de Serviços",
                     "Cadastro de Profissionais",
-                    "Cadastro de Horários",
+                    "Cadastro de Horários",  # só admin pode ver
                     "Perfil"
                 ]
             else:
@@ -83,8 +82,6 @@ class IndexUI:
             if tipo_usuario == "profissional":
                 if op == "Cadastro de Serviços":
                     ManterServicoUI.main()
-                elif op == "Cadastro de Horários":
-                    ManterHorarioUI.main()
                 elif op == "Abrir Minha Agenda":
                     AbrirAgendaUI.main()
                 elif op == "Visualizar Minha Agenda":
@@ -95,7 +92,7 @@ class IndexUI:
                     PerfilUI.main()
 
             elif tipo_usuario == "cliente":
-                if op == "Agendar Serviço":       
+                if op == "Agendar Serviço":
                     AgendarServicoUI.main()
                 elif op == "Visualizar Meus Serviços":
                     VisualizarServicosUI.main()
@@ -113,7 +110,6 @@ class IndexUI:
                     ManterHorarioUI.main()
                 elif op == "Perfil":
                     PerfilAdminUI.main()
-
 
     @staticmethod
     def main():
