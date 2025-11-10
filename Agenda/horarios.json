@@ -320,14 +320,14 @@
     },
     {
         "id": 31,
-        "data": "14/11/2025 08:30",
+        "data": "10/11/2025 22:46",
         "confirmado": false,
-        "id_cliente": null,
-        "id_servico": null,
+        "id_cliente": 8,
+        "id_servico": 1,
         "id_profissional": 1,
-        "status": "pendente",
+        "status": "remarcado",
         "data_cancelamento": null,
-        "data_reagendamento": null
+        "data_reagendamento": "10/11/2025 22:46"
     },
     {
         "id": 32,
@@ -507,14 +507,14 @@
     },
     {
         "id": 48,
-        "data": "20/11/2025 16:15",
+        "data": "10/11/2025 16:00",
         "confirmado": false,
-        "id_cliente": null,
-        "id_servico": null,
+        "id_cliente": 8,
+        "id_servico": 2,
         "id_profissional": 1,
-        "status": "pendente",
-        "data_cancelamento": null,
-        "data_reagendamento": null
+        "status": "cancelado",
+        "data_cancelamento": "10/11/2025 22:38",
+        "data_reagendamento": "10/11/2025 16:00"
     },
     {
         "id": 49,

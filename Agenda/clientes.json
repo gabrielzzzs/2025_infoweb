@@ -13,7 +13,6 @@
         "fone": "987654321",
         "senha": "12345"
     },
-
     {
         "id": 5,
         "nome": "emily",
@@ -37,24 +36,9 @@
     },
     {
         "id": 8,
-        "nome": "lucas",
-        "email": "lucas@lucas",
-        "fone": "",
-        "senha": "123456"
-    },
-    {
-        "id": 9,
-        "nome": "jane",
-        "email": "jane@jane",
-        "fone": "1234567",
-        "senha": "12345"
-    },
-
-    {
-        "id": 10,
-        "nome": "cliente",
-        "email": "cliente@cliente",
-        "fone": "1234567",
+        "nome": "gabriel",
+        "email": "gabriel",
+        "fone": "1234",
         "senha": "123"
     }
 ]
